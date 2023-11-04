@@ -36,6 +36,8 @@ class _MyFloatState extends State<MyFloats> {
 
   @override
   Widget build(BuildContext context) {
+    CategoryDB.instance.refreshCategoryUi();
+    TransactionDb.instance.refresh();
     return Scaffold(
       resizeToAvoidBottomInset: false, //overflow over come
       appBar: AppBar(

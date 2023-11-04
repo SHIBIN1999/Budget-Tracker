@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:money_1/db/category/categorydb.dart';
+import 'package:money_1/db/transaction/transactiondb.dart';
 import 'package:money_1/models/categorymodel.dart';
 
 class IncomeList extends StatelessWidget {
@@ -33,7 +34,7 @@ class IncomeList extends StatelessWidget {
                       elevation: 10,
                       child: ListTile(
                         title: Text(category.name),
-                        // subtitle: Text(category.limit.toString()),
+                        //
                         trailing: IconButton(
                           onPressed: () async {
                             CategoryDB.instance.deleteCategory(category.id);

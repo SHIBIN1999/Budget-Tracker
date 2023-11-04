@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "23518617673",
+    "project_id": "akshayanew-9613c",
+    "storage_bucket": "akshayanew-9613c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:23518617673:android:758bd4c6cd64fee40adf98",
+        "android_client_info": {
+          "package_name": "com.example.money_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbH8nxDGCi90KT9TBCeNKTnxzgdQXEBFI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

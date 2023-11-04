@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:money_1/calculation/sort.dart';
@@ -45,6 +47,7 @@ class TransactionDb implements TransactionDbFunction {
 
   @override
   Future<List<TransactionModel>> getAllTransaction() async {
+    log('inside all transcation fn');
     final db = await Hive.openBox<TransactionModel>(transactionDb);
     final reversedData = db.values.toList().reversed.toList();
     return reversedData;
@@ -52,8 +55,11 @@ class TransactionDb implements TransactionDbFunction {
 
   @override
   Future<void> deleteTransaction(int id) async {
+    print(id);
+    log('inside deleteTranscation');
     final db = await Hive.openBox<TransactionModel>(transactionDb);
-    await db.deleteAt(id);
+    db.deleteAt(id);
+    log('deleteddd');
     refresh();
   }
 

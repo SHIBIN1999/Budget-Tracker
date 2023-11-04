@@ -47,7 +47,8 @@ class _MySeeAllState extends State<MySeeAll> {
       valueListenable: TransactionDb.instance.transactionNotifier,
       builder: (BuildContext ctx, List<TransactionModel> newList, Widget? _) {
         // Filter transactions based on selected category and date filters
-        List<TransactionModel> filteredList = newList.where((transaction) {
+        List<TransactionModel> filteredList =
+            newList.reversed.where((transaction) {
           bool categoryMatch = selectedCategoryFilter == 'All' ||
               (selectedCategoryFilter == 'Income' &&
                   transaction.type == CategoryType.income) ||
@@ -69,8 +70,6 @@ class _MySeeAllState extends State<MySeeAll> {
 
           return categoryMatch && dateMatch && textMatch;
         }).toList();
-
-        filteredList = filterTransactionsByDateRange(filteredList);
 
         return Scaffold(
           appBar: AppBar(
@@ -329,75 +328,86 @@ class _MySeeAllState extends State<MySeeAll> {
                                     ]),
                                 child: Padding(
                                   padding: const EdgeInsets.all(.0),
-                                  child: CustomContainer(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Icon(
-                                          transaction.type ==
-                                                  CategoryType.income
-                                              ? Icons.arrow_circle_up_outlined
-                                              : Icons.arrow_circle_down_sharp,
-                                          size: 45,
-                                          color: transaction.type ==
-                                                  CategoryType.income
-                                              ? Colors.green
-                                              : Colors.red,
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              transaction.category.name,
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16),
-                                            ),
-                                            const SizedBox(
-                                              height: 5,
-                                            ),
-                                            Text(
-                                                'Spend:  ₹${transaction.amount}'),
-                                            Text(
-                                                'Limit:  ₹${transaction.limit}'),
-                                            Text(transaction.limit >
-                                                    transaction.amount
-                                                ? 'Remainig:  ₹${transaction.limit - transaction.amount}'
-                                                : 'Remainig:  ₹0.00'),
-                                          ],
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            const SizedBox(
-                                              height: 5,
-                                            ),
-                                            // GestureDetector(
-                                            //     onTap: () {
-                                            //       showEditLimitPop(
-                                            //           context, transaction);
-                                            //     },
-                                            //     child: const Icon(
-                                            //         Icons.more_vert_rounded)),
-                                            const SizedBox(
-                                              height: 10,
-                                            ),
-                                            Text(parseDate(transaction.date)),
-                                            Text(
-                                              transaction.amount >
-                                                      transaction.limit
-                                                  ? '*Limit exceeded'
-                                                  : '',
-                                              style: const TextStyle(
-                                                  color: Colors.red,
-                                                  fontWeight: FontWeight.bold),
-                                            )
-                                          ],
-                                        ),
-                                      ],
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      print(index);
+                                    },
+                                    child: CustomContainer(
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Icon(
+                                            transaction.type ==
+                                                    CategoryType.income
+                                                ? Icons.arrow_circle_up_outlined
+                                                : Icons.arrow_circle_down_sharp,
+                                            size: 45,
+                                            color: transaction.type ==
+                                                    CategoryType.income
+                                                ? Colors.green
+                                                : Colors.red,
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                transaction.category.name,
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16),
+                                              ),
+                                              const SizedBox(
+                                                height: 5,
+                                              ),
+                                              Text(
+                                                  'Spend:  ₹${transaction.amount}'),
+                                              transaction.type ==
+                                                      CategoryType.income
+                                                  ? const SizedBox()
+                                                  : Text(
+                                                      'Limit:  ₹${transaction.limit}'),
+                                              transaction.type ==
+                                                      CategoryType.income
+                                                  ? const SizedBox()
+                                                  : Text(transaction.limit >
+                                                          transaction.amount
+                                                      ? 'Remainig:  ₹${transaction.limit - transaction.amount}'
+                                                      : 'Remainig:  ₹0.00'),
+                                            ],
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              const SizedBox(
+                                                height: 5,
+                                              ),
+                                              // GestureDetector(
+                                              //     onTap: () {
+                                              //       showEditLimitPop(
+                                              //           context, transaction);
+                                              //     },
+                                              //     child: const Icon(
+                                              //         Icons.more_vert_rounded)),
+                                              const SizedBox(
+                                                height: 10,
+                                              ),
+                                              Text(parseDate(transaction.date)),
+                                              // Text(
+                                              //   transaction.amount >
+                                              //           transaction.limit
+                                              //       ? '*Limit exceeded'
+                                              //       : '',
+                                              //   style: const TextStyle(
+                                              //       color: Colors.red,
+                                              //       fontWeight: FontWeight.bold),
+                                              // )
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ));
