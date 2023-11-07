@@ -8,7 +8,7 @@ import 'package:money_1/Setting/term_condition.dart';
 import 'package:money_1/db/category/categorydb.dart';
 import 'package:money_1/db/transaction/transactiondb.dart';
 import 'package:money_1/home/home.dart';
-import 'package:money_1/screen/splash.dart';
+import 'package:money_1/onboarding/onboarding.dart';
 
 class Myprofile extends StatefulWidget {
   const Myprofile({
@@ -38,11 +38,11 @@ class _MyprofileState extends State<Myprofile> {
               onPressed: () {
                 TransactionDb.instance.clearTransactionDb();
                 CategoryDB.instance.clearCategoryDb();
-                Navigator.of(context).pushReplacement(MaterialPageRoute(
-                  builder: (context) => MyHome(),
-                ));
                 TransactionDb.instance.refresh();
                 CategoryDB.instance.refreshCategoryUi();
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                  builder: (context) => IntroScreen(),
+                ));
 
                 // this change
               },
