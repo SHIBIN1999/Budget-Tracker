@@ -37,10 +37,14 @@ class _UpdateTransactionScreenState extends State<UpdateTransactionScreen> {
     selectedDate = widget.editModel.date;
     selectedCategorytype = widget.editModel.type;
     selectedCategoryModel = widget.editModel.category;
+    CategoryDB.instance.refreshCategoryUi();
+    TransactionDb.instance.refresh();
   }
 
   @override
   Widget build(BuildContext context) {
+    CategoryDB.instance.refreshCategoryUi();
+    TransactionDb.instance.refresh();
     return Scaffold(
       resizeToAvoidBottomInset: false, //overflow over come
       appBar: AppBar(
@@ -205,6 +209,8 @@ class _UpdateTransactionScreenState extends State<UpdateTransactionScreen> {
                         ),
                         onPressed: () {
                           editTransactions();
+                          CategoryDB.instance.refreshCategoryUi();
+                          TransactionDb.instance.refresh();
                           //Navigator.of(context).pop();
                         },
                         child: const Center(

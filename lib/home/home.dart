@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:ffi';
 
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +28,7 @@ class MyHome extends StatefulWidget {
   const MyHome({
     Key? key,
   }) : super(key: key);
+  static final ValueNotifier<int> selectedIndexNotifier = ValueNotifier<int>(0);
   @override
   State<MyHome> createState() => _MyHomeState();
 }
@@ -39,6 +41,8 @@ class _MyHomeState extends State<MyHome> {
   @override
   void initState() {
     super.initState();
+    TransactionDb.instance.refresh();
+    CategoryDB.instance.refreshCategoryUi();
     _page = [
       const HomeScreens(),
       const Statistics(),
@@ -54,7 +58,8 @@ class _MyHomeState extends State<MyHome> {
     return Scaffold(
       body: SafeArea(
           child: ValueListenableBuilder(
-        valueListenable: selectedIndexNotifier,
+        //valueListenable: selectedIndexNotifier,
+        valueListenable: MyHome.selectedIndexNotifier,
         builder: (BuildContext ctx, int updatedindex, Widget? _) {
           return _page[_currentindex];
         },
@@ -154,8 +159,10 @@ class _HomeScreensState extends State<HomeScreens> {
                       ),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal),
+                          backgroundColor: Colors.teal,
+                        ),
                         onPressed: () {
+                          MyHome.selectedIndexNotifier.value = 3;
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => const MySeeAll(),
@@ -171,185 +178,251 @@ class _HomeScreensState extends State<HomeScreens> {
                           ),
                         ),
                       ),
+
+                      // ElevatedButton(
+                      //   style: ElevatedButton.styleFrom(
+                      //       backgroundColor: Colors.teal),
+                      //   onPressed: () {
+                      //     MyHome.selectedIndexNotifier.value = 3;
+                      //     Navigator.of(context).push(
+                      //       MaterialPageRoute(
+                      //         builder: (context) => const MySeeAll(),
+                      //       ),
+                      //     );
+                      //   },
+                      //   child: const Text(
+                      //     'See All',
+                      //     style: TextStyle(
+                      //       fontWeight: FontWeight.w600,
+                      //       fontSize: 16,
+                      //       color: Color.fromARGB(255, 18, 18, 18),
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
                 // Replace this part with your transaction history list
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ValueListenableBuilder(
-                      valueListenable: Hive.box<TransactionModel>(transactionDb)
-                          .listenable(),
-                      // TransactionDb.instance.transactionNotifier,
-                      builder: (BuildContext ctx, Box<TransactionModel> newList,
-                          Widget? _) {
-                        return Hive.box<TransactionModel>(transactionDb).isEmpty
-                            ? const Center(
-                                child: Text("No Transaction Found"),
-                              )
-                            : ListView.separated(
-                                itemBuilder: (context, index) {
-                                  final transactions =
-                                      newList.values.toList()[index];
-                                  return Slidable(
-                                      key: Key(transactions.id!),
-                                      startActionPane: ActionPane(
-                                        motion: const ScrollMotion(),
-                                        children: [
-                                          SlidableAction(
-                                            onPressed: (context) {
-                                              log('onpress id ${transactions.id}',
-                                                  name: 'Slidable');
-                                              showDialog(
-                                                context: context,
-                                                builder: (context) {
-                                                  return AlertDialog(
-                                                    title: const Text(
-                                                        'Do you want to delete this transaction ?'),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          TransactionDb.instance
-                                                              .deleteTransaction(
-                                                                  index);
-                                                          TransactionDb.instance
-                                                              .refresh();
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                          AnimatedSnackBar
-                                                              .rectangle(
-                                                            'Success',
-                                                            'Transaction deleted successfully..',
-                                                            type:
-                                                                AnimatedSnackBarType
-                                                                    .success,
-                                                            brightness:
-                                                                Brightness
-                                                                    .light,
-                                                            duration:
-                                                                const Duration(
-                                                              seconds: 5,
-                                                            ),
-                                                          ).show(
-                                                            context,
-                                                          );
-                                                        },
-                                                        child:
-                                                            const Text('Yes'),
-                                                      ),
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                        child: const Text('No'),
-                                                      )
-                                                    ],
-                                                  );
-                                                },
-                                              );
-                                            },
-                                            icon: Icons.delete,
-                                            backgroundColor: Colors.red,
-                                            label: 'delete',
-                                          ),
-                                          SlidableAction(
-                                            onPressed: (context) {
-                                              print(
-                                                'onpress id ${transactions.id}',
-                                              );
-                                              //edit funtion
-                                              Navigator.of(context).push(
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      UpdateTransactionScreen(
-                                                    editModel: transactions,
-                                                    // intex: index,
+                  child: ValueListenableBuilder(
+                    valueListenable:
+                        Hive.box<TransactionModel>(transactionDb).listenable(),
+                    //TransactionDb.instance.transactionNotifier,
+                    builder: (BuildContext ctx, Box<TransactionModel> newList,
+                        Widget? _) {
+                      return Hive.box<TransactionModel>(transactionDb).isEmpty
+                          ? const Center(
+                              child: Text("No Transaction Found"),
+                            )
+                          : ListView.separated(
+                              itemBuilder: (context, index) {
+                                final transactions =
+                                    newList.values.toList()[index];
+                                return Slidable(
+                                  key: Key(transactions.id!),
+                                  startActionPane: ActionPane(
+                                    motion: const ScrollMotion(),
+                                    children: [
+                                      SlidableAction(
+                                        onPressed: (context) {
+                                          log('onpress id ${transactions.id}',
+                                              name: 'Slidable');
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                title: const Text(
+                                                    'Do you want to delete this transaction ?'),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      TransactionDb.instance
+                                                          .deleteTransaction(
+                                                              index);
+                                                      TransactionDb.instance
+                                                          .refresh();
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                      AnimatedSnackBar
+                                                          .rectangle(
+                                                        'Success',
+                                                        'Transaction deleted successfully..',
+                                                        type:
+                                                            AnimatedSnackBarType
+                                                                .success,
+                                                        brightness:
+                                                            Brightness.light,
+                                                        duration:
+                                                            const Duration(
+                                                          seconds: 5,
+                                                        ),
+                                                      ).show(
+                                                        context,
+                                                      );
+                                                    },
+                                                    child: const Text('Yes'),
                                                   ),
-                                                ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: const Text('No'),
+                                                  )
+                                                ],
                                               );
                                             },
-                                            icon: Icons.edit,
-                                            backgroundColor: Colors.green,
-                                            label: 'edit',
-                                          )
+                                          );
+                                        },
+                                        icon: Icons.delete,
+                                        backgroundColor: Colors.red,
+                                        label: 'delete',
+                                      ),
+                                      SlidableAction(
+                                        onPressed: (context) {
+                                          print(
+                                            'onpress id ${transactions.id}',
+                                          );
+                                          //edit funtion
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  UpdateTransactionScreen(
+                                                editModel: transactions,
+                                                // intex: index,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        icon: Icons.edit,
+                                        backgroundColor: Colors.green,
+                                        label: 'edit',
+                                      )
+                                    ],
+                                  ),
+                                  child: CustomContainer(
+                                    child: ListTile(
+                                      //
+                                      leading: Icon(
+                                        transactions.type == CategoryType.income
+                                            ? Icons.arrow_circle_up_outlined
+                                            : Icons.arrow_circle_down_sharp,
+                                        size: 45,
+                                        color: transactions.type ==
+                                                CategoryType.income
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                      title: Text(
+                                        transactions.category.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            transactions.type ==
+                                                    CategoryType.income
+                                                ? 'Amount: ₹${transactions.amount}'
+                                                : 'Spend: ₹${transactions.amount}',
+                                          ),
+                                          if (transactions.type !=
+                                              CategoryType.income)
+                                            Text(
+                                                'Limit: ₹${transactions.limit}'),
+                                          if (transactions.type !=
+                                              CategoryType.income)
+                                            Text(transactions.limit >
+                                                    transactions.amount
+                                                ? 'Remaining:₹${transactions.limit - transactions.amount}'
+                                                : 'Remaining:₹0.00'),
                                         ],
                                       ),
-                                      child: CustomContainer(
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Icon(
-                                              transactions.type ==
-                                                      CategoryType.income
-                                                  ? Icons
-                                                      .arrow_circle_up_outlined
-                                                  : Icons
-                                                      .arrow_circle_down_sharp,
-                                              size: 45,
-                                              color: transactions.type ==
-                                                      CategoryType.income
-                                                  ? Colors.green
-                                                  : Colors.red,
-                                            ),
+                                      trailing:
+                                          Text(parseDate(transactions.date)),
+                                    ),
+                                  ),
 
-                                            //////
-                                            ///
+                                  // child: Row(
+                                  //   mainAxisAlignment:
+                                  //       MainAxisAlignment.spaceBetween,
+                                  //   children: [
+                                  //     Icon(
+                                  //       transactions.type ==
+                                  //               CategoryType.income
+                                  //           ? Icons
+                                  //               .arrow_circle_up_outlined
+                                  //           : Icons
+                                  //               .arrow_circle_down_sharp,
+                                  //       size: 45,
+                                  //       color: transactions.type ==
+                                  //               CategoryType.income
+                                  //           ? Colors.green
+                                  //           : Colors.red,
+                                  //     ),
 
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  transactions.category.name,
-                                                  style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 16),
-                                                ),
-                                                Text(
-                                                    'Spend:  ₹${transactions.amount}'),
-                                                transactions.type ==
-                                                        CategoryType.income
-                                                    ? const SizedBox()
-                                                    : Text(
-                                                        'Limit:  ₹${transactions.limit}'),
-                                                transactions.type ==
-                                                        CategoryType.income
-                                                    ? const SizedBox()
-                                                    : Text(transactions.limit >
-                                                            transactions.amount
-                                                        ? 'Remainig:  ₹${transactions.limit - transactions.amount}'
-                                                        : 'Remainig:  ₹0.00'),
-                                              ],
-                                            ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                const SizedBox(
-                                                  height: 5,
-                                                ),
-                                                SizedBox(
-                                                  height: 10,
-                                                ),
-                                                Text(parseDate(
-                                                    transactions.date)),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ));
-                                },
-                                separatorBuilder: (context, index) {
-                                  return const SizedBox(height: 12);
-                                },
-                                itemCount:
-                                    newList.length > 2 ? 2 : newList.length);
-                      },
-                    ),
+                                  //     //////
+                                  //     ///
+
+                                  //     Column(
+                                  //       crossAxisAlignment:
+                                  //           CrossAxisAlignment.start,
+                                  //       children: [
+                                  //         Text(
+                                  //           transactions.category.name,
+                                  //           style: const TextStyle(
+                                  //               fontWeight:
+                                  //                   FontWeight.bold,
+                                  //               fontSize: 16),
+                                  //         ),
+                                  //         transactions.type ==
+                                  //                 CategoryType.income
+                                  //             ? Text(
+                                  //                 'Amount:  ₹${transactions.amount}')
+                                  //             : Text(
+                                  //                 'Spend:  ₹${transactions.amount}'),
+                                  //         transactions.type ==
+                                  //                 CategoryType.income
+                                  //             ? const SizedBox()
+                                  //             : Text(
+                                  //                 'Limit:  ₹${transactions.limit}'),
+                                  //         transactions.type ==
+                                  //                 CategoryType.income
+                                  //             ? const SizedBox()
+                                  //             : Text(transactions.limit >
+                                  //                     transactions.amount
+                                  //                 ? 'Remainig:  ₹${transactions.limit - transactions.amount}'
+                                  //                 : 'Remainig:  ₹0.00'),
+                                  //       ],
+                                  //     ),
+                                  //     Column(
+                                  //       crossAxisAlignment:
+                                  //           CrossAxisAlignment.end,
+                                  //       children: [
+                                  //         const SizedBox(
+                                  //           height: 5,
+                                  //         ),
+                                  //         SizedBox(
+                                  //           height: 10,
+                                  //         ),
+                                  //         Text(parseDate(
+                                  //             transactions.date)),
+                                  //       ],
+                                  //     ),
+                                  //   ],
+                                  // ),
+                                );
+                              },
+                              separatorBuilder: (context, index) {
+                                return const SizedBox(height: 12);
+                              },
+                              itemCount:
+                                  newList.length > 2 ? 2 : newList.length);
+                    },
                   ),
                 ),
               ],
@@ -359,6 +432,8 @@ class _HomeScreensState extends State<HomeScreens> {
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.teal,
           onPressed: () {
+            TransactionDb.instance.refresh();
+            CategoryDB.instance.refreshCategoryUi();
             Navigator.of(context)
                 .push(MaterialPageRoute(builder: (ctx) => const MyFloats()));
           },
@@ -370,6 +445,8 @@ class _HomeScreensState extends State<HomeScreens> {
 }
 
 Widget _head() {
+  TransactionDb.instance.refresh();
+  CategoryDB.instance.refreshCategoryUi();
   return Stack(
     children: [
       Column(

@@ -1,16 +1,20 @@
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
+import 'package:custom_date_range_picker/custom_date_range_picker.dart';
+//import 'package:date_range_picker/date_range_picker.dart' as DateRangePicker;
 
 import 'package:money_1/botton/floating.dart';
 import 'package:money_1/botton/updated.dart';
+import 'package:money_1/db/category/categorydb.dart';
 import 'package:money_1/db/transaction/transactiondb.dart';
 import 'package:money_1/models/categorymodel.dart';
 import 'package:money_1/models/transcation_model.dart';
 import 'package:money_1/widgets.dart';
-import 'package:custom_date_range_picker/custom_date_range_picker.dart';
+
 import 'package:money_1/widgets/custom_container_widget.dart';
 
 class MySeeAll extends StatefulWidget {
@@ -21,11 +25,20 @@ class MySeeAll extends StatefulWidget {
 }
 
 class _MySeeAllState extends State<MySeeAll> {
+  List<TransactionModel> newList = [];
   String selectedCategoryFilter = 'All';
   String selectedDateFilter = 'All';
   String searchText = '';
   DateTime? startDate;
   DateTime? endDate;
+  List<TransactionModel> filteredList = [];
+  @override
+  void initState() {
+    super.initState();
+    //newList = fetchTransactions();
+    TransactionDb.instance.refresh();
+    CategoryDB.instance.refreshCategoryUi();
+  }
 
   List<TransactionModel> filterTransactionsByDateRange(
       List<TransactionModel> transactions) {
@@ -40,15 +53,10 @@ class _MySeeAllState extends State<MySeeAll> {
     }).toList();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    TransactionDb.instance.refresh();
-    return ValueListenableBuilder(
-      valueListenable: TransactionDb.instance.transactionNotifier,
-      builder: (BuildContext ctx, List<TransactionModel> newList, Widget? _) {
-        // Filter transactions based on selected category and date filters
-        List<TransactionModel> filteredList =
-            newList.reversed.where((transaction) {
+  void updateFilteredList(List<TransactionModel> newList) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        filteredList = newList.reversed.where((transaction) {
           bool categoryMatch = selectedCategoryFilter == 'All' ||
               (selectedCategoryFilter == 'Income' &&
                   transaction.type == CategoryType.income) ||
@@ -68,8 +76,39 @@ class _MySeeAllState extends State<MySeeAll> {
                   .toLowerCase()
                   .contains(searchText.toLowerCase());
 
-          return categoryMatch && dateMatch && textMatch;
+          return categoryMatch && dateMatch && textMatch; //remove dateMatch
         }).toList();
+        if (startDate != null && endDate != null) {
+          //including new in time filler
+          filteredList = filterTransactionsByDateRange(filteredList);
+        }
+      });
+    });
+  }
+
+  // List<TransactionModel> filterTransactionsByDateRange(
+  //     List<TransactionModel> transactions) {
+  //   if (startDate == null || endDate == null) {
+  //     return transactions;
+  //   }
+
+  //   return transactions.where((transaction) {
+  //     return transaction.date.isAtSameMomentAs(startDate!) ||
+  //         (transaction.date.isAfter(startDate!) &&
+  //             transaction.date.isBefore(endDate!.add(const Duration(days: 1))));
+  //   }).toList();
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    TransactionDb.instance.refresh();
+    //CategoryDB.instance.refreshCategoryUi();
+    return ValueListenableBuilder(
+      valueListenable: TransactionDb.instance.transactionNotifier,
+      builder: (BuildContext ctx, List<TransactionModel> newList, Widget? _) {
+        // Filter transactions based on selected category and date filters
+        updateFilteredList(newList);
+        //showDateRangePicker();
 
         return Scaffold(
           appBar: AppBar(
@@ -122,6 +161,11 @@ class _MySeeAllState extends State<MySeeAll> {
                   onSelected: (String filter) {
                     setState(() {
                       selectedDateFilter = filter;
+                      if (filter != 'All') {
+                        //including 3 comments
+                        startDate = null;
+                        endDate = null;
+                      }
                     });
                   },
                   itemBuilder: (context) => [
@@ -206,13 +250,20 @@ class _MySeeAllState extends State<MySeeAll> {
                           setState(() {
                             startDate = start;
                             endDate = end;
+                            selectedDateFilter = 'All';
                           });
+
+                          // Filter transactions by date range
+                          //  updateFilteredList(newList);
                         },
                         onCancelClick: () {
                           setState(() {
                             startDate = null;
                             endDate = null;
                           });
+
+                          // Remove date range filter
+                          // updateFilteredList(newList);
                         },
                       );
                     },
@@ -221,7 +272,9 @@ class _MySeeAllState extends State<MySeeAll> {
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                     ),
                     child: startDate == null
                         ? const Row(
@@ -333,80 +386,50 @@ class _MySeeAllState extends State<MySeeAll> {
                                       print(index);
                                     },
                                     child: CustomContainer(
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Icon(
-                                            transaction.type ==
-                                                    CategoryType.income
-                                                ? Icons.arrow_circle_up_outlined
-                                                : Icons.arrow_circle_down_sharp,
-                                            size: 45,
-                                            color: transaction.type ==
-                                                    CategoryType.income
-                                                ? Colors.green
-                                                : Colors.red,
+                                      child: ListTile(
+                                        //
+                                        leading: Icon(
+                                          transaction.type ==
+                                                  CategoryType.income
+                                              ? Icons.arrow_circle_up_outlined
+                                              : Icons.arrow_circle_down_sharp,
+                                          size: 45,
+                                          color: transaction.type ==
+                                                  CategoryType.income
+                                              ? Colors.green
+                                              : Colors.red,
+                                        ),
+                                        title: Text(
+                                          transaction.category.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
                                           ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                transaction.category.name,
-                                                style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16),
-                                              ),
-                                              const SizedBox(
-                                                height: 5,
-                                              ),
-                                              Text(
-                                                  'Spend:  ₹${transaction.amount}'),
+                                        ),
+                                        subtitle: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
                                               transaction.type ==
                                                       CategoryType.income
-                                                  ? const SizedBox()
-                                                  : Text(
-                                                      'Limit:  ₹${transaction.limit}'),
-                                              transaction.type ==
-                                                      CategoryType.income
-                                                  ? const SizedBox()
-                                                  : Text(transaction.limit >
-                                                          transaction.amount
-                                                      ? 'Remainig:  ₹${transaction.limit - transaction.amount}'
-                                                      : 'Remainig:  ₹0.00'),
-                                            ],
-                                          ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              const SizedBox(
-                                                height: 5,
-                                              ),
-                                              // GestureDetector(
-                                              //     onTap: () {
-                                              //       showEditLimitPop(
-                                              //           context, transaction);
-                                              //     },
-                                              //     child: const Icon(
-                                              //         Icons.more_vert_rounded)),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Text(parseDate(transaction.date)),
-                                              // Text(
-                                              //   transaction.amount >
-                                              //           transaction.limit
-                                              //       ? '*Limit exceeded'
-                                              //       : '',
-                                              //   style: const TextStyle(
-                                              //       color: Colors.red,
-                                              //       fontWeight: FontWeight.bold),
-                                              // )
-                                            ],
-                                          ),
-                                        ],
+                                                  ? 'Amount: ₹${transaction.amount}'
+                                                  : 'Spend: ₹${transaction.amount}',
+                                            ),
+                                            if (transaction.type !=
+                                                CategoryType.income)
+                                              Text(
+                                                  'Limit: ₹${transaction.limit}'),
+                                            if (transaction.type !=
+                                                CategoryType.income)
+                                              Text(transaction.limit >
+                                                      transaction.amount
+                                                  ? 'Remaining:₹${transaction.limit - transaction.amount}'
+                                                  : 'Remaining:₹0.00'),
+                                          ],
+                                        ),
+                                        trailing:
+                                            Text(parseDate(transaction.date)),
                                       ),
                                     ),
                                   ),
@@ -415,12 +438,14 @@ class _MySeeAllState extends State<MySeeAll> {
                           separatorBuilder: (context, index) {
                             return const SizedBox(height: 12);
                           },
-                          itemCount: newList.length))
+                          itemCount: filteredList.length)) // newList.length
             ],
           ),
           floatingActionButton: FloatingActionButton(
             backgroundColor: Colors.teal,
             onPressed: () {
+              TransactionDb.instance.refresh();
+              CategoryDB.instance.refreshCategoryUi();
               Navigator.of(context)
                   .push(MaterialPageRoute(builder: (ctx) => const MyFloats()));
             },
@@ -457,3 +482,5 @@ class _MySeeAllState extends State<MySeeAll> {
     return date.year == now.year && date.month == now.month;
   }
 }
+//part 2
+
