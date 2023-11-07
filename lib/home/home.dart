@@ -519,7 +519,7 @@ Widget _head() {
                 'Total Balance',
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
-                  fontSize: 18,
+                  fontSize: 23,
                   color: Colors.black,
                 ),
               ),
@@ -530,7 +530,7 @@ Widget _head() {
                   return Text(
                     '₹ $tbalance',
                     style: GoogleFonts.quicksand(
-                      fontSize: 34,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   );
@@ -580,7 +580,7 @@ Widget _head() {
                                   // Display Total Income
                                   '₹ $value',
                                   style: GoogleFonts.quicksand(
-                                    fontSize: 22,
+                                    fontSize: 13,
                                     color: Colors.black,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -626,7 +626,7 @@ Widget _head() {
                                   // Display Total Income
                                   '₹ $value',
                                   style: GoogleFonts.quicksand(
-                                    fontSize: 22,
+                                    fontSize: 13,
                                     color: Colors.black,
                                     fontWeight: FontWeight.w500,
                                   ),

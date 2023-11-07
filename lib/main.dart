@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'package:money_1/db/transaction/transactiondb.dart';
 
 import 'package:money_1/models/categorymodel.dart';
 import 'package:money_1/models/transcation_model.dart';
@@ -26,7 +27,7 @@ Future<void> main() async {
   if (!Hive.isAdapterRegistered(TransactionModelAdapter().typeId)) {
     Hive.registerAdapter(TransactionModelAdapter());
   }
-
+  await Hive.openBox<TransactionModel>(transactionDb);
   runApp(MyApp(
     loggedIn: loggedIn,
   ));

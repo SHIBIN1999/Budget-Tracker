@@ -39,8 +39,12 @@ class _MyprofileState extends State<Myprofile> {
                 TransactionDb.instance.clearTransactionDb();
                 CategoryDB.instance.clearCategoryDb();
                 Navigator.of(context).pushReplacement(MaterialPageRoute(
-                  builder: (context) => MySplash(), // this change
+                  builder: (context) => MyHome(),
                 ));
+                TransactionDb.instance.refresh();
+                CategoryDB.instance.refreshCategoryUi();
+
+                // this change
               },
               child: const Text('Yes'),
             ),
